@@ -20,7 +20,7 @@ def get_std(arr):
      arr_std = arr.std()
      return arr_std
 
-def array_division_367(arr, cal = "none"):
+def array_division_each_id(arr, cal = "none"):
      # calculator = ["None", "Mean", "Var", "Std"]
      newArr = np.zeros( int(len(arr) / dataType.SRC_len) )
      index = 0
@@ -38,5 +38,33 @@ def array_division_367(arr, cal = "none"):
                     print(" error from numpy_process.py. array_division_367 ")
                index += 1
      return newArr
+
+def division_pairArr(pairArr):
+     arr_len = pairArr.shape[0]
+     newX_arr = np.zeros(arr_len)
+     newY_arr = np.zeros(arr_len)
+     for i in range(arr_len):
+          newX_arr[i] = pairArr[i,0]
+          newY_arr[i] = pairArr[i,1]
+     return newX_arr, newY_arr
+
+def sampling_arr(x_arr, y_arr, index):
+     newX_arr = x_arr[0+(index*dataType.SRC_len) : dataType.SRC_len + (index*dataType.SRC_len)]
+     newY_arr = y_arr[0+(index*dataType.SRC_len) : dataType.SRC_len + (index*dataType.SRC_len)]
+     return newX_arr, newY_arr
+
+def merge_pairArr(x_arr, y_arr):
+     xd = len(x_arr)
+     newArr = np.zeros([xd, 2])
+     for i in range(newArr.shape[0]):
+          newArr[i, 0] = x_arr[i]
+          newArr[i, 1] = y_arr[i]
+     return newArr
+
+def merge_arr(x_arr, y_arr):
+     xd = len(x_arr)
+     yd = len(y_arr)
+     newArr = np.zeros([xd, yd])
+     
 
      
