@@ -48,9 +48,12 @@ def division_pairArr(pairArr):
           newY_arr[i] = pairArr[i,1]
      return newX_arr, newY_arr
 
-def sampling_arr(x_arr, y_arr, index):
+def sampling_arr(x_arr, y_arr, index, pairArr = True):
      newX_arr = x_arr[0+(index*dataType.SRC_len) : dataType.SRC_len + (index*dataType.SRC_len)]
-     newY_arr = y_arr[0+(index*dataType.SRC_len) : dataType.SRC_len + (index*dataType.SRC_len)]
+     if ( pairArr == False):
+          newY_arr = None
+     else:
+          newY_arr = y_arr[0+(index*dataType.SRC_len) : dataType.SRC_len + (index*dataType.SRC_len)]
      return newX_arr, newY_arr
 
 def merge_pairArr(x_arr, y_arr):
@@ -65,6 +68,10 @@ def merge_arr(x_arr, y_arr):
      xd = len(x_arr)
      yd = len(y_arr)
      newArr = np.zeros([xd, yd])
+
+def reshape_2dto1d(arr):
+     new_arr = arr.reshape( arr.shape[0] * arr.shape[1])
+     return new_arr
      
 
      

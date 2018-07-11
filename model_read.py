@@ -1,7 +1,7 @@
 import os, json
 import matplotlib.pyplot as plt
 
-from weka_jsonFormat import *
+from weka_Format import *
 
 class root():
      def __init__(self):
@@ -35,24 +35,24 @@ def read(model_root):
 
      return dataList
 
-def save_json(dataList, fileName):
-     front_str, last_str = weka_json_format()
+def save_arff(dataList, fileName):
+     arff_str = weka_data_format()
      
-     dir_root = "./temp_json"
+     dir_root = "./temp_arff"
      save_root = os.path.join(dir_root, fileName)
      if not (os.path.exists(dir_root)):
           os.mkdir(dir_root)
 
      temp = []
      with open(save_root, 'w') as f:
-          f.write(front_str)     
+          f.write(arff_str)     
           for i in range(len(dataList)):
-               temp.append(dataList[i]["itemId"])
-               itemId = json.dumps(temp)
-               temp = []
-               srcData = json.dumps(dataList[i]["srcData"])
-               f.write("\n " + itemId + srcData +",")
-          f.write(last_str)
+               f.write(str(dataList[i]["itemId"]))
+               f.write(",")
+               srcData = ','.join(list(map(str, dataList[i]["srcData"])))
+               f.write(srcData)
+               f.write("\n")
+
      f.close()
 
 def insert_dict(new_dic, val, key):
@@ -61,11 +61,20 @@ def insert_dict(new_dic, val, key):
      else:
           new_dic[key].append(val)
 
-def load():
+def load(dataName, saveOp = True):
      data_root = root()
+     if (dataName == "T01"):
+          data = read(data_root.T01_ROOT)
+     elif(dataName == "T06" ):
+          data = read(data_root.T06_ROOT)
+     elif(dataName == "T07" ):
+          data = read(data_root.T07_ROOT)
+     else:
+          print( "error from dataName")
+          return False
 
-     data = read(data_root.T01_ROOT)
-     save_json(data, "temp_json.json")
+     if(saveOp == True):
+          save_arff(data, "temp_arff.arff")
 
      x_data = []
      y_data = []
@@ -75,4 +84,6 @@ def load():
           for j in range(len(data[i]["srcData"])):
                x_data.append(data[i]["itemId"])
      return x_data, y_data
+
+
 

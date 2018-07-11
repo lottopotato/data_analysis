@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import matplotlib
+import os, datetime
 
 from numpy_process import *
 
@@ -20,7 +21,7 @@ def scatter(plot, x_data, y_data, name, setColor, scale, option = "add"):
           plt.title(name)
      else:
           plot.scatter(x_data, y_data, color = setColor, s= scale, label = name)
-          plot.title(name)
+          plot.set_title(name)
 
 def line(plot, x_data, y_data, name, setColor, option = "add"):
      if (option == "basic"):
@@ -28,9 +29,13 @@ def line(plot, x_data, y_data, name, setColor, option = "add"):
           plt.title(name)
      else:
           plot.plot(x_data, y_data, color = setColor, label = name)
-          plot.title(name)
+          plot.set_title(name)
 
 def basic4info_fig(x_arr, y_arr):
+     print(" ========================== ")
+     print(" basic original plot ")
+     print(" original / mean / var / std ")
+     print(" ========================== ")
      newX_arr = array_division_each_id(x_arr)
 
      mean_y = array_division_each_id(y_arr, "mean")
@@ -38,15 +43,15 @@ def basic4info_fig(x_arr, y_arr):
      std_y = array_division_each_id(y_arr, "std")
 
      fig, plot = create_fig(2,2)
-     scatter(plot[0,0], x_arr, y_arr, "basic", "mediumvioletred", 0.1)
+     scatter(plot[0,0], x_arr, y_arr, "original", "mediumvioletred", 0.1)
      scatter(plot[0,1], newX_arr, mean_y, "mean", "blue", 0.1)
      scatter(plot[1,0], newX_arr, var_y, "var", "red", 0.1)
      scatter(plot[1,1], newX_arr, std_y, "std", "green", 0.1)
 
      setting_fig(fig, "basic4info")
-     plot_show()
+     plot_show(fig, "basic4info", save = True)
 
-def plot_show():
+def plot_show(fig, name, save = True):
      manager = plt.get_current_fig_manager()
      if (matplotlib.get_backend() == 'TkAgg'):
           manager.window.state('zoomed')
@@ -54,7 +59,20 @@ def plot_show():
           manager.frame.Maximize(True)
      elif(matplotlib.get_backend() == 'QT4Agg'):
           manager.window.showMaximized()
-     
+     if(save == True):
+          plot_save(fig, name)
      plt.show()
+
+def plot_save(fig, logName):
+     project_root = os.path.abspath(os.path.dirname(__file__))
+     dir_name = "plot_log"
+     save_root = os.path.join(project_root, dir_name)
+     if not os.path.exists(save_root):
+          os.mkdir(save_root)
+
+     nowDate = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S").replace(":","_")
+     saveName = logName + nowDate
+     save_full_root = os.path.join(save_root, saveName)
+     fig.savefig(save_full_root)
 
 
