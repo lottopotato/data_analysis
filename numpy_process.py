@@ -1,8 +1,12 @@
 import numpy as np
 
-from data_type import dataType
+def expandDims(arr, axis):
+     new_arr = np.expand_dims(arr, axis=axis)
+     return new_arr
 
-dataType = dataType()
+def arrArange(i):
+     x_arr = np.arange(i)
+     return x_arr
 
 def list2numpy(data):
      data_arr = np.asarray(data)
@@ -20,23 +24,22 @@ def get_std(arr):
      arr_std = arr.std()
      return arr_std
 
-def array_division_each_id(arr, cal = "none"):
+def array_cal_each_id(arr, cal = "none"):
      # calculator = ["None", "Mean", "Var", "Std"]
-     newArr = np.zeros( int(len(arr) / dataType.SRC_len) )
+     newArr = np.zeros( int(len(arr[:])) )
      index = 0
-     for i in range(len(arr)):
-          if i % dataType.SRC_len == 0:
-               if(cal == "none"):
-                    newArr[index] = arr[i]
-               elif(cal == "mean"):
-                    newArr[index] = get_mean(arr[i : i + dataType.SRC_len])
-               elif(cal == "var"):
-                    newArr[index] = get_var(arr[i : i + dataType.SRC_len])
-               elif(cal == "std"):
-                    newArr[index] = get_std(arr[i : i + dataType.SRC_len])
-               else:
-                    print(" error from numpy_process.py. array_division_367 ")
-               index += 1
+     for i in range(len(arr[:])):
+          if(cal == "none"):
+               newArr = None
+          elif(cal == "mean"):
+               newArr[i] = get_mean(arr[:][index])
+          elif(cal == "var"):
+               newArr[i] = get_var(arr[:][index])
+          elif(cal == "std"):
+               newArr[i] = get_std(arr[:][index])
+          else:
+               print(" error from numpy_process.py. array_division_367 ")
+          index += 1
      return newArr
 
 def division_pairArr(pairArr):
@@ -46,14 +49,6 @@ def division_pairArr(pairArr):
      for i in range(arr_len):
           newX_arr[i] = pairArr[i,0]
           newY_arr[i] = pairArr[i,1]
-     return newX_arr, newY_arr
-
-def sampling_arr(x_arr, y_arr, index, pairArr = True):
-     newX_arr = x_arr[0+(index*dataType.SRC_len) : dataType.SRC_len + (index*dataType.SRC_len)]
-     if ( pairArr == False):
-          newY_arr = None
-     else:
-          newY_arr = y_arr[0+(index*dataType.SRC_len) : dataType.SRC_len + (index*dataType.SRC_len)]
      return newX_arr, newY_arr
 
 def merge_pairArr(x_arr, y_arr):

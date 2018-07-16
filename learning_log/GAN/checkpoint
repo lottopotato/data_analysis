@@ -1,0 +1,4 @@
+model_checkpoint_path: "C:\\Users\\khh\\Documents\\\355\203\200\355\202\244\354\230\250\\QG\\learning_log\\GAN/model.ckpt-300"
+all_model_checkpoint_paths: "C:\\Users\\khh\\Documents\\\355\203\200\355\202\244\354\230\250\\QG\\learning_log\\GAN/model.ckpt-100"
+all_model_checkpoint_paths: "C:\\Users\\khh\\Documents\\\355\203\200\355\202\244\354\230\250\\QG\\learning_log\\GAN/model.ckpt-200"
+all_model_checkpoint_paths: "C:\\Users\\khh\\Documents\\\355\203\200\355\202\244\354\230\250\\QG\\learning_log\\GAN/model.ckpt-300"

@@ -19,6 +19,7 @@ class root():
           self.T01_ROOT = os.path.join(self.model_ROOT_2 + "/T01/", self.model_T01)
           self.T06_ROOT = os.path.join(self.model_ROOT_1, self.model_T06)
           self.T07_ROOT = os.path.join(self.model_ROOT_2 + "/T07/", self.model_T07)
+          self.test = os.path.join(self.model_ROOT_2 + "/T07/", "test.json")
 
 def read(model_root):
      data = []
@@ -29,10 +30,12 @@ def read(model_root):
           for i in range(len(data)):
                insert_dict(sample, data[i]["itemId"], "itemId")
                insert_dict(sample, data[i]["srcData"], "srcData")
-
+               print( " data read - {} ".format(i+1) + " / " + " {} ".format(len(data)), end="\r")
                dataList.append(sample)
                sample = {}
-
+          print("\n data read done ")
+          print(" ========================== ")
+     f.close()
      return dataList
 
 def save_arff(dataList, fileName):
@@ -69,6 +72,8 @@ def load(dataName, saveOp = True):
           data = read(data_root.T06_ROOT)
      elif(dataName == "T07" ):
           data = read(data_root.T07_ROOT)
+     elif(dataName == "test"):
+          data = read(data_root.test)
      else:
           print( "error from dataName")
           return False
@@ -80,9 +85,8 @@ def load(dataName, saveOp = True):
      y_data = []
 
      for i in range(len(data)):
-          y_data.extend(data[i]["srcData"])
-          for j in range(len(data[i]["srcData"])):
-               x_data.append(data[i]["itemId"])
+          x_data.append(data[i]["itemId"])
+          y_data.append(data[i]["srcData"])       
      return x_data, y_data
 
 
