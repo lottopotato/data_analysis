@@ -4,6 +4,7 @@ import time, os
 
 from plot import *
 from numpy_process import list2numpy
+from run_sklearn import hgCluster_single_metric
 
 project_ROOT = os.path.abspath(os.path.dirname(__file__))
 learningLog = os.path.join(project_ROOT, "learning_log")
@@ -44,17 +45,17 @@ class autoEncoder:
           self.num_steps = step
           self.print_point = print_step
           
-          self.num_hidden_1 = 256
-          self.num_hidden_2 = 128
+          self.num_hidden_1 = 128
+          self.num_hidden_2 = 64
           self.num_input = int(self.data.shape[1])
 
           self.X = tf.placeholder("float", [1, self.num_input])
 
           self.weights = {
-               "encoder_h1" : tf.Variable(tf.random_normal([self.num_input, self.num_hidden_1])),
-               "encoder_h2" : tf.Variable(tf.random_normal([self.num_hidden_1, self.num_hidden_2])),
-               "decoder_h1" : tf.Variable(tf.random_normal([self.num_hidden_2, self.num_hidden_1])),
-               "decoder_h2" : tf.Variable(tf.random_normal([self.num_hidden_1, self.num_input]))
+               "encoder_h1" : tf.Variable(tf.random_normal([self.num_input, self.num_hidden_1], stddev=0.01 )),
+               "encoder_h2" : tf.Variable(tf.random_normal([self.num_hidden_1, self.num_hidden_2], stddev=0.01)),
+               "decoder_h1" : tf.Variable(tf.random_normal([self.num_hidden_2, self.num_hidden_1], stddev=0.01)),
+               "decoder_h2" : tf.Variable(tf.random_normal([self.num_hidden_1, self.num_input], stddev=0.01))
                }
           self.biases = {
                "encoder_b1" : tf.Variable(tf.zeros([self.num_hidden_1])),
@@ -93,10 +94,12 @@ class autoEncoder:
           saver = tf.train.Saver()
           with tf.Session() as sess:
                sess.run(init)
-               ckpt = tf.train.get_checkpoint_state(self.LOG_DIR)
+               """
+               ckpt = tf.train.get_checkpoint_state(os.path.join("learning_log", "autoEncoder"))
                if ckpt and ckpt.model_checkpoint_path:
                     saver.restore(sess, ckpt.model_checkpoint_path)
                     print("Model restored...")
+                    """
 
                # train
                for i in range(1, self.num_steps+1):
@@ -112,7 +115,7 @@ class autoEncoder:
                          point_step_final = time.time()
                          print("\n time : " + str( (point_step_final - step_start) * self.print_point) )
                          print(" ===================== ")
-                         save(self.LOG_DIR, saver, sess, i)
+                         #save(self.LOG_DIR, saver, sess, i)
                print("\n ===================== ")
 
                # encoder
@@ -139,6 +142,7 @@ class autoEncoder:
                     for i in range(self.testSpace):
                          plot[1].plot( np.arange(self.num_input), de_arr[i] )
                     fig.canvas.set_window_title("compare test")
+                    plt.savefig(self.LOG_DIR + "/sample.png", bbox_inches="tight")
                     
           newY_arr = list2numpy(y_encoder) * self.dataMax    
           return newY_arr, self.num_hidden_2, self.num_steps
@@ -187,24 +191,24 @@ class GenerativeAdversarialNet:
           self.num_steps = step
           self.print_point = print_step
           
-          self.num_hidden = 256
+          self.num_hidden = 128
           self.num_input = int(self.data.shape[1])
-          self.num_noise = 128
+          self.num_noise = 64
 
           self.X = tf.placeholder(tf.float32, [1, self.num_input])
           self.Z = tf.placeholder(tf.float32, [1, self.num_noise])
 
           self.G = {
-               "W1" : tf.Variable(tf.random_normal([self.num_noise, self.num_hidden], stddev=0.01)),
-               "b1" : tf.Variable(tf.zeros([self.num_hidden])),
-               "W2" : tf.Variable(tf.random_normal([self.num_hidden, self.num_input], stddev=0.01)),
-               "b2" : tf.Variable(tf.zeros(self.num_input))
+               "W1" : tf.get_variable('g_w1', [self.num_noise, self.num_hidden], dtype=tf.float32, initializer=tf.truncated_normal_initializer(stddev=0.02)),
+               "b1" : tf.get_variable('g_b1', [self.num_hidden], initializer=tf.zeros_initializer()),
+               "W2" : tf.get_variable('g_w2', [self.num_hidden, self.num_input], dtype=tf.float32, initializer=tf.truncated_normal_initializer(stddev=0.02)),
+               "b2" : tf.get_variable('g_b2', [self.num_input], initializer=tf.zeros_initializer())
                }
           self.D = {
-               "W1" : tf.Variable(tf.random_normal([self.num_input, self.num_hidden], stddev=0.01)),
-               "b1" : tf.Variable(tf.zeros([self.num_hidden])),
-               "W2" : tf.Variable(tf.random_normal([self.num_hidden, 1], stddev=0.01)),
-               "b2" : tf.Variable(tf.zeros([1]))
+               "W1" : tf.get_variable('d_w1', [self.num_input, self.num_hidden], dtype=tf.float32, initializer=tf.truncated_normal_initializer(stddev=0.02)),
+               "b1" : tf.get_variable('d_b1', [self.num_hidden], initializer=tf.zeros_initializer()),
+               "W2" : tf.get_variable('d_w2', [self.num_hidden, 1], dtype=tf.float32, initializer=tf.truncated_normal_initializer(stddev=0.02)),
+               "b2" : tf.get_variable('d_b2', [1], initializer=tf.zeros_initializer())
                }
 
           self.LOG_DIR = os.path.join(learningLog, "GAN")
@@ -224,7 +228,7 @@ class GenerativeAdversarialNet:
           return output
 
      def create_noise(self):
-          return np.random.normal(size = (1, self.num_noise))
+          return np.random.normal(0, 1, size = (1, self.num_noise))
 
      def run(self, test = True):
           G = self.generator(self.Z)
@@ -251,13 +255,19 @@ class GenerativeAdversarialNet:
           init = tf.global_variables_initializer()
           saver = tf.train.Saver()
           with tf.Session() as sess:
-               sess.run(init)
+               tf.summary.scalar("G_loss", loss_G)
+               tf.summary.scalar("D_loss_real", loss_D_real)
+               tf.summary.scalar("D_loss_fake", loss_D_fake)
 
-               loss_var_D, loss_var_G = 0, 0
-               ckpt = tf.train.get_checkpoint_state(self.LOG_DIR)
+               summary_op = tf.summary.merge_all()
+               summary_writer = tf.summary.FileWriter(os.path.join("learning_log", "GAN"))
+               sess.run(init)
+               """
+               ckpt = tf.train.get_checkpoint_state(os.path.join("learning_log", "GAN"))
                if ckpt and ckpt.model_checkpoint_path:
                     saver.restore(sess, ckpt.model_checkpoint_path)
                     print(" -> Model restored...")
+                    """
 
                for i in range(1, self.num_steps+1):
                     step_start = time.time()
@@ -265,23 +275,23 @@ class GenerativeAdversarialNet:
                          sample = np.expand_dims(self.data[j], axis=0) / self.dataMax
                          noise = self.create_noise()
 
-                         _, __, loss_real, loss_fake = sess.run([train_D_real, train_D_fake, loss_D_real, loss_D_fake],
+                         _, __, cost_D, loss_D = sess.run([train_D_real, train_D_fake, loss_D_real, loss_D_fake],
                                                   feed_dict={self.X : sample, self.Z : noise})
-                         _, loss_G_real = sess.run([train_G, loss_G], feed_dict={self.Z : noise})
+                         _ = sess.run(train_G, feed_dict={self.Z : noise})
 
-                    print("  - step %i _ D-loss : %f G-loss : %f" %(i, loss_real, loss_G_real), end = "\r")
+                    print("  - step %i _ real-cost : %f fake-loss : %f" %(i, cost_D, loss_D), end = "\r")
 
                     if( i % self.print_point == 0 ):
                          point_step_final = time.time()
                          print("\n time : " + str( (point_step_final - step_start) * self.print_point) )
                          print(" ===================== ")
-                         save(self.LOG_DIR, saver, sess, i)
+                         #save(self.LOG_DIR, saver, sess, i)
 
                          if( test == True):
                               noise = self.create_noise()
                               fake_waveForm = sess.run(G, feed_dict={self.Z : noise}) #* self.dataMax
                               fig, plot = create_fig(None, None)
-                              line(plot, arrArange(self.num_input), fake_waveForm[0], "GAN test",
+                              line(plot, arrArange(self.num_input), (fake_waveForm[0] * self.dataMax), "GAN test",
                                    "fake wave form" , None, 1)
                               sampleImg_root = os.path.join(self.LOG_DIR, "img")
                               if not os.path.exists(sampleImg_root):
@@ -291,7 +301,7 @@ class GenerativeAdversarialNet:
                print("\n ===================== ")
 
                fake_arr = np.zeros([self.data_row, self.data.shape[1]])
-               for i in range(self_data_row):
+               for i in range(self.data_row):
                     sample = np.expand_dims(self.data[i], axis=0) / self.dataMax
                     noise = self.create_noise()
                     fake_arr[i] = sess.run(G, feed_dict={self.Z : noise})
@@ -316,8 +326,103 @@ def GAN_run(src_arr, itemId, test, learning_rate, step, print_step, damageList):
      print("\n")
      return fig, step
 
+# Deep Neural Network
+class DeepNeuralNet:
+     def __init__(self, data, itemId, test = 100, learning_rate = 0.001, step = 100,
+                  print_step = 10):
+          # src data
+          self.data = data
+          self.data_row = int(self.data.shape[0])
+          self.dataMax = self.data.max()
+          self.testSpace = test
 
+          # item id
+          self.itemId = itemId
+          self.labels = hgCluster_single_metric(self.data, 3)
 
+          self.one_hot_labels = np.zeros([self.data_row, 3])
+          for i in range(len(self.labels)):
+               for j in range(3):
+                    if (self.labels[i] == j):
+                         self.one_hot_labels[i, j] = 1
+                         break
+          # run test
+          if ( self.data_row < test ):
+               print("\n error : test row must small then total row \n")
+               return None
+          
+          self.learning_rate = learning_rate
+          self.num_steps = step
+          self.print_point = print_step
+
+          self.num_input = int(self.data.shape[1])
+          self.num_hidden1 = 128
+          self.num_hidden2 = 256
+          self.num_hidden3 = 512
+          self.num_class = 3
+
+          self.X = tf.placeholder(tf.float32, [1, self.num_input])
+          self.y = tf.placeholder(tf.float32, [1, 3])
+
+          self.W1 = tf.get_variable('w1', [self.num_input, self.num_hidden1], dtype=tf.float32,
+                                    initializer=tf.truncated_normal_initializer(stddev=0.02))
+          self.b1 = tf.get_variable('b1', [self.num_hidden1], initializer=tf.zeros_initializer())
+          self.W2 = tf.get_variable('w2', [self.num_hidden1, self.num_hidden2], dtype=tf.float32,
+                                    initializer=tf.truncated_normal_initializer(stddev=0.02))
+          self.b2 = tf.get_variable('b2', [self.num_hidden2], initializer=tf.zeros_initializer())
+          self.W3 = tf.get_variable('w3', [self.num_hidden2, self.num_hidden3], dtype=tf.float32,
+                                    initializer=tf.truncated_normal_initializer(stddev=0.02))
+          self.b3 = tf.get_variable('b3', [self.num_hidden3], initializer=tf.zeros_initializer())
+          self.W4 = tf.get_variable('w4', [self.num_hidden3, self.num_class], dtype=tf.float32,
+                                    initializer=tf.truncated_normal_initializer(stddev=0.02))
+          self.b4 = tf.get_variable('b4', [self.num_class], initializer=tf.zeros_initializer())
+
+          self.layer1 = tf.nn.relu(tf.matmul(self.X, self.W1) + self.b1)
+          self.layer2 = tf.nn.relu(tf.matmul(self.layer1, self.W2) + self.b2)
+          self.layer3 = tf.nn.relu(tf.matmul(self.layer2, self.W3) + self.b3)
+          self.fc = tf.matmul(self.layer3, self.W4) + self.b4
+
+     def run(self):
+          varList = [self.W1, self.b1, self.W2, self.b2, self.W3, self.b3, self.W4, self.b4]
+          loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(
+               logits = self.fc, labels = self.y))
+          train_op = tf.train.AdamOptimizer(self.learning_rate).minimize(
+               loss, var_list = varList)
+          sess = tf.Session()
+          sess.run(tf.global_variables_initializer())
+
+          loss_list = []
+          for i in range(1, self.num_steps):
+               step_start = time.time()
+               for j in range(self.data_row):
+                    sample = np.expand_dims(self.data[j], axis=0) / self.dataMax
+                    sample_label = np.expand_dims(self.one_hot_labels[j], axis=0)
+
+                    train_loss, _ = sess.run([loss, train_op],
+                                             feed_dict = {self.X : sample, self.y : sample_label})
+               loss_list.append(train_loss)
+
+               print("  - step %i _ loss : %f" %(i, train_loss), end = "\r")
+
+               if( i % self.print_point == 0 ):
+                    point_step_final = time.time()
+                    print("\n time : " + str( (point_step_final - step_start) * self.print_point) )
+                    print(" ===================== ")
+                    #save(self.LOG_DIR, saver, sess, i)
+          return list2numpy(loss_list)
+
+def DNN_run(src_arr, itemId, test, learning_rate, step, print_step):
+     DNN = DeepNeuralNet(src_arr, itemId, test, learning_rate, step, print_step)
+     printOption("Deep Neural Network", learning_rate, step, src_arr.shape[0])
+     loss_list = DNN.run()
+
+     tick_arr = arrArange(src_arr.shape[1])
+     fig, plot = create_fig(1,2)
+     line(plot[0], loss_list, None, "loss", "DNN-loss", None, 1, option="singleArr")
+          #print(" - drawing plot ... {}".format(i+1) + " / " + "{}".format(src_arr.shape[0]) , end = "\r")
+     print("\n")
+     return fig, step
+     
 
 
 

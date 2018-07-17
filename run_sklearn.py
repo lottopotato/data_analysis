@@ -68,6 +68,11 @@ def hgCluster_run(arr, n_cluster):
           model = aggClusters(n_clusters=n_cluster, linkage="average", affinity=metric).fit(arr)
           modelList.append(model.labels_)
      return modelList
+
+def hgCluster_single_metric(arr, n_cluster):
+     model = aggClusters(n_clusters = n_cluster, linkage = "average", affinity = "cityblock")
+     model.fit(arr)
+     return model.labels_
                
 def hgCluster(src_data, numberOfCluster, input_dataName, itemId, thickness, damageList):
      data_row = src_data.shape[0]
@@ -84,11 +89,17 @@ def hgCluster(src_data, numberOfCluster, input_dataName, itemId, thickness, dama
      for label, color in zip(arrArange(numberOfCluster), "rgb"):
           temp = src_data[hgClusterList[0] == label].T
           line(plot[0,1], temp, None, "cosine", "cosine", color, thickness, option="singleArr")
-          temp = src_data[hgClusterList[1] == label].T
-          line(plot[1,0], temp, None, "euclidean", "euclidean", color, thickness, option="singleArr")
-          temp = src_data[hgClusterList[2] == label].T
-          line(plot[1,1], temp, None, "cityblock", "cityblock", color, thickness, option="singleArr")
+          temp2 = src_data[hgClusterList[1] == label].T
+          line(plot[1,0], temp2, None, "euclidean", "euclidean", color, thickness, option="singleArr")
+          temp3 = src_data[hgClusterList[2] == label].T
+          line(plot[1,1], temp3, None, "cityblock", "cityblock", color, thickness, option="singleArr")
           print(" - drawing plot ... {}".format(label+1) + " / " + "{}".format(numberOfCluster) , end = "\r")
      print("\n")
                        
      return fig
+
+def checking(labels, itemId, check):
+     for i in range(len(labels)):
+          for j in range(3):
+               if (labels[i] == check):
+                    print(itemId[i])

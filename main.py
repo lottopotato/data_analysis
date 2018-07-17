@@ -11,9 +11,13 @@ from run_tensorflow import *
 
 class damageForm:
      def __init__(self):
-          self.T01 = ["1883528", "1872728"]
-          self.T07 = ["1710095", "1673625"]
-          self.T06 = ["1791668", "1787443", "1779031", "1769686"]
+          # 동기화 문제 있음.
+          #self.T01 = ["1883485", "1872723"]
+          #self.T07 = ["1710089", "1673293"]
+          #self.T06 = [] all 마모
+          self.T06 = []
+          self.T01 = []
+          self.T07 = []
      def returnList(self, name):
           if (name == "T01"):
                damageList = self.T01
@@ -31,7 +35,7 @@ def main(argv):
           analysis_name = sys.argv[2]
      except IndexError:
           print(" data name list [ \"T01\" , \"T06\" , \"T07\" ] ")
-          print(" clustering & unsupervised learning list [ \"original\" , \"kmeans\" , \"autoEncoder\", \"hierarchical\", \"GAN\"] ")
+          print(" analysis list [ \"original\" , \"kmeans\" , \"autoEncoder\", \"hierarchical\", \"GAN\"] ")
           print(" usage : main.py dataName clustering&unsupervised_Learning ")
           print(" or do input a field below.")
           dataName = input( " data name : ")
@@ -64,37 +68,41 @@ def plot_setting(tick_arr, src_arr, itemId, dataName, analysis_name, save):
      if ( analysis_name == "original"):
           basic4info_fig(tick_arr, src_arr, itemId, fig_name, 0.1, save, damageList)
      else:
-          # kmeans
+          # clustering. kmeans
           if( analysis_name == "kmeans"):
                compareName = "std"
                if not (compareName in ["mean", "var", "std"]):
                     print(" possible form : " + str(["mean", "var", "std"]))
                     return False
                n_cluster = 3
-               fig_name += "_n_" + str(n_cluster)
+               fig_name += "_n_" + str(n_cluster) + "_"
                fig = kmeans(src_arr, n_cluster, compareName, itemId, 1, damageList)
 
-          # Hierarchical-agglomerative
+          # clustering. Hierarchical-agglomerative
           elif( analysis_name == "hierarchical"):
                n_cluster = 3
-               fig_name += "_n_" + str(n_cluster)
+               fig_name += "_n_" + str(n_cluster) + "_"
                fig = hgCluster(src_arr, n_cluster, "original", itemId, 1, damageList)
                
-          # autoEncoder
+          # unsupervised-learning. auto-encoder
           elif( analysis_name == "autoEncoder"):
                fig, step =autoEncoder_run(src_arr, itemId, test =100, learning_rate = 0.01,
-                                    step = 1000, print_step = 100, damageList = damageList)
-               fig_name += "_step_" + str(step)
+                                    step = 30, print_step = 10, damageList = damageList)
+               fig_name += "_step_" + str(step) + "_"
 
-          # Generative Adversarial Network
+          # unsupervised-learning. Generative Adversarial Network
           elif( analysis_name == "GAN"):
-               fig, step = GAN_run(src_arr, itemId, test=10, learning_rate = 0.0004, step = 1000, print_step = 100,
+               fig, step = GAN_run(src_arr, itemId, test=10, learning_rate = 0.001, step = 50, print_step = 10,
                        damageList = damageList)
 
-               fig_name += "_step" + str(step)
+               fig_name += "_step" + str(step) + "_"
+
+          # supervised=learning. Deep Neural Network with Hierarchical - manhatten distance
+          elif( analysis_name == "DNN"):
+               fig, step = DNN_run(src_arr, itemId, test = 10, learning_rate = 0.001, step = 50, print_step = 10)
                
           else:
-               print(" clustering & unsupervised learning list [ \"original\" , \"kmeans\" , \"autoEncoder\", \"hierarchical\", \"GAN\" ] ")
+               print(" analysis list [ \"original\" , \"kmeans\" , \"autoEncoder\", \"hierarchical\", \"GAN\" ] ")
                print( " error from main.py plot_setting")
                return False
                
