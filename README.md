@@ -27,14 +27,14 @@
 3. 지도학습에서 hierarchical city block distance 로 레이블링
 
 ### 클러스터링 ###
-![1](./T01_kmeans_n_3_2018-07-17 18_13_09.png)
+![1](https://github.com/lottopotato/data_analysis/blob/test/T01_hierarchical_n_3_2018-07-17%2018_15_32.png)
 
-![2](./T01_hierarchical_n_3_2018-07-17 18_15_32.png)
+![2](https://github.com/lottopotato/data_analysis/blob/test/T01_kmeans_n_3_2018-07-17%2018_13_09.png)
 
-![3](./T06_kmeans_n_3_2018-07-17 18_51_08.png)
+![3](https://github.com/lottopotato/data_analysis/blob/test/T06_hierarchical_n_3_2018-07-17%2018_35_42.png)
 
-![4](./T06_hierarchical_n_3_2018-07-17 18_35_42.png)
+![4](https://github.com/lottopotato/data_analysis/blob/test/T06_kmeans_n_3_2018-07-17%2018_51_08.png)
 
-![5](./T07_kmeans_n_3_2018-07-18 10_05_13.png)
+![5](https://github.com/lottopotato/data_analysis/blob/test/T07_hierarchical_n_3_2018-07-17%2018_39_02.png)
 
-![6](./T07_hierarchical_n_3_2018-07-17 18_39_02.png)
+![6](https://github.com/lottopotato/data_analysis/blob/test/T07_kmeans_n_3_2018-07-18%2010_05_13.png)
