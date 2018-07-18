@@ -1,6 +1,7 @@
 # clustering
 from sklearn.cluster import KMeans
 from sklearn.cluster import AgglomerativeClustering as aggClusters
+import time
 
 #import matplotlib.pyplot as plt
 #import numpy as np
@@ -18,9 +19,12 @@ def printOption(cluster_name, n_cluster, total_len, input_dataName):
 
 # class kmean
 def kmeans_run(arr, n_cluster):
+     start = time.time()
      kmeans = KMeans(n_clusters = n_cluster).fit(expandDims(arr,1))
      x = kmeans.cluster_centers_
      y = kmeans.labels_
+     final = time.time()
+     print("\n Clustering complete.  time : {}\n".format(str(final - start)))
      return x.reshape(n_cluster), y
 
 def kmeans(src_arr, numberOfCluster, input_dataName, itemId, thickness, damageList):
@@ -31,7 +35,6 @@ def kmeans(src_arr, numberOfCluster, input_dataName, itemId, thickness, damageLi
      printOption("kmeans", numberOfCluster, data_row, input_dataName)
      
      center, label = kmeans_run(input_data, numberOfCluster)
-     print("\n k-means processing done ", end="\n")
      return kmeans_plot(src_arr, label, data_row, input_data, input_dataName, itemId, thickness, damageList)
      
 def kmeans_plot(src_data, label, data_row, input_data, input_dataName, itemId, thickness, damageList):
@@ -62,11 +65,14 @@ def kmeans_plot(src_data, label, data_row, input_data, input_dataName, itemId, t
           
 # class Hierarchical-agglomerative-clustering
 def hgCluster_run(arr, n_cluster):
+     start = time.time()
      modelList = []
      for index, metric in enumerate(["cosine", "euclidean", "cityblock"]):
           #arr = np.expand_dims(arr, axis=0)
           model = aggClusters(n_clusters=n_cluster, linkage="average", affinity=metric).fit(arr)
           modelList.append(model.labels_)
+     final = time.time()
+     print("\n Clustering complete.  time : {}\n".format(str(final - start)))
      return modelList
 
 def hgCluster_single_metric(arr, n_cluster):

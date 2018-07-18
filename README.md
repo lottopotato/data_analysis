@@ -12,26 +12,29 @@
 - sklearn
 - tensorflow
 
-### 0716. 현재 진행사항 ###
-1. python3 main.py dataName original : 오리지날 데이터(평균, 분산, 표준편차) 그래프 
-2. python3 main.py dataName kmeans : K-means 클러스터링
-3. python3 main.py dataName hierarchical : Hierarchical-agglomerative 클러스터링
-4. python3 main.py dataName autoEncoder : 비지도학습 auto-encoder
-5. python3 main.py dataName GAN : 비지도학습 Generative Adversarial Networks
+### 0718. 현재 진행사항 ###
+1. 오리지날 데이터(평균, 분산, 표준편차) 그래프 
+2. K-means 클러스터링
+3. Hierarchical-agglomerative 클러스터링
+4. 비지도학습 auto-encoder
+5. 비지도학습 Generative Adversarial Networks
+6. 지도학습 Deep Neural Networks
 
 
-### 향후 계획 ###
-- 파형의 파손데이터를 생성하여 레이블링후 지도학습 (CNN 이나 RNN)을 적용해 classification 해봄
+### 정리 ###
+1. 클러스터는 T01 과 T06 데이터에서 좀더 잘 동작함.
+2. 비지도 학습 GAN 은 현재 의미 있는 결과를 볼수없음.
+3. 지도학습에서 hierarchical city block distance 로 레이블링
 
 ### 클러스터링 ###
-![](./T01_kmeans_n_3_2018-07-17 18_13_09.png)
+![1](./T01_kmeans_n_3_2018-07-17 18_13_09.png)
 
-![](./T01_hierarchical_n_3_2018-07-17 18_15_32.png)
+![2](./T01_hierarchical_n_3_2018-07-17 18_15_32.png)
 
-![](./T06_kmeans_n_3_2018-07-17 14_55_33.png)
+![3](./T06_kmeans_n_3_2018-07-17 18_51_08.png)
 
-![](./T06_hierarchical_n_3_2018-07-17 18_35_42.png)
+![4](./T06_hierarchical_n_3_2018-07-17 18_35_42.png)
 
-![](./T07_kmeans_n_3_2018-07-18 10_05_13.png)
+![5](./T07_kmeans_n_3_2018-07-18 10_05_13.png)
 
-![](./T07_hierarchical_n_3_2018-07-17 18_39_02.png)
+![6](./T07_hierarchical_n_3_2018-07-17 18_39_02.png)

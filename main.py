@@ -55,7 +55,6 @@ def main(argv):
      print(" ticks range of each id : " + str(src_arr.shape[1]))
      print(" ========================== \n")
 
-     # clustering & unsupervised learning [ "original" , "kmeans" , "autoEncoder" ]
      plot_setting(tick_arr, src_arr, item, dataName, analysis_name, save = True)
 
 def plot_setting(tick_arr, src_arr, itemId, dataName, analysis_name, save):
@@ -92,14 +91,32 @@ def plot_setting(tick_arr, src_arr, itemId, dataName, analysis_name, save):
 
           # unsupervised-learning. Generative Adversarial Network
           elif( analysis_name == "GAN"):
-               fig, step = GAN_run(src_arr, itemId, test=10, learning_rate = 0.001, step = 50, print_step = 10,
+               fig, step = GAN_run(src_arr, itemId, test=10, learning_rate = 0.0002, step = 100, print_step = 10,
                        damageList = damageList)
 
                fig_name += "_step" + str(step) + "_"
 
           # supervised=learning. Deep Neural Network with Hierarchical - manhatten distance
           elif( analysis_name == "DNN"):
-               fig, step = DNN_run(src_arr, itemId, test = 10, learning_rate = 0.001, step = 50, print_step = 10)
+               fig, step = DNN_run(src_arr, itemId, test = 200, learning_rate = 0.001, step = 10, print_step = 10)
+               fig_name += "_step" + str(step) + "_"
+
+          # expand damage wave form test, * 100
+          elif( analysis_name == "test"):
+               dnn_test = DeepNeuralNet(src_arr, itemId, test = 10, learning_rate = 0.001, step = 1, print_step = 1)
+               newArr, labels = dnn_test.getNewData()
+               fig, plot = create_fig(1, 2)
+               row_arr = arrArange(len(labels))
+               plot[0].plot( row_arr, labels, linewidth = 0.1)
+               damage = 0
+               normal = 0
+               for i in range(len(labels)):
+                    if ( labels[i] == 1):
+                         damage += 1
+                         plot[1].plot(newArr[i])
+                    else:
+                         normal += 1
+               print( "damage : %i normal : %i" %(damage, normal))
                
           else:
                print(" analysis list [ \"original\" , \"kmeans\" , \"autoEncoder\", \"hierarchical\", \"GAN\" ] ")

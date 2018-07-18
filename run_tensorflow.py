@@ -178,6 +178,7 @@ class GenerativeAdversarialNet:
           
           # src data
           self.data = data
+          np.random.shuffle(self.data)
           self.data_row = int(self.data.shape[0])
           self.dataMax = self.data.max()
           self.testSpace = test
@@ -193,7 +194,7 @@ class GenerativeAdversarialNet:
           
           self.num_hidden = 128
           self.num_input = int(self.data.shape[1])
-          self.num_noise = 64
+          self.num_noise = 128
 
           self.X = tf.placeholder(tf.float32, [1, self.num_input])
           self.Z = tf.placeholder(tf.float32, [1, self.num_noise])
@@ -216,19 +217,17 @@ class GenerativeAdversarialNet:
      def generator(self, noise):
           hidden = tf.nn.relu(
                tf.matmul(noise, self.G['W1']) + self.G['b1'])
-          output = tf.nn.sigmoid(
-               tf.matmul(hidden, self.G['W2']) + self.G['b2'])
+          output = tf.matmul(hidden, self.G['W2']) + self.G['b2']
           return output
 
      def discriminator(self, inputs):
           hidden = tf.nn.relu(
                tf.matmul(inputs, self.D['W1']) + self.D['b1'])
-          output = tf.nn.sigmoid(
-               tf.matmul(hidden, self.D['W2']) + self.D['b2'])
+          output = tf.matmul(hidden, self.D['W2']) + self.D['b2']
           return output
 
-     def create_noise(self):
-          return np.random.normal(0, 1, size = (1, self.num_noise))
+     def create_noise(self, mean, scale):
+          return np.random.normal(mean, scale, size = (1, self.num_noise))
 
      def run(self, test = True):
           G = self.generator(self.Z)
@@ -271,10 +270,10 @@ class GenerativeAdversarialNet:
 
                for i in range(1, self.num_steps+1):
                     step_start = time.time()
+                    noise = self.create_noise(0.5, 0.01)
                     for j in range(int(self.data_row)):
                          sample = np.expand_dims(self.data[j], axis=0) / self.dataMax
-                         noise = self.create_noise()
-
+                         
                          _, __, cost_D, loss_D = sess.run([train_D_real, train_D_fake, loss_D_real, loss_D_fake],
                                                   feed_dict={self.X : sample, self.Z : noise})
                          _ = sess.run(train_G, feed_dict={self.Z : noise})
@@ -288,8 +287,8 @@ class GenerativeAdversarialNet:
                          #save(self.LOG_DIR, saver, sess, i)
 
                          if( test == True):
-                              noise = self.create_noise()
-                              fake_waveForm = sess.run(G, feed_dict={self.Z : noise}) #* self.dataMax
+                              noise = self.create_noise(0.5, 0.01)
+                              fake_waveForm = sess.run(G, feed_dict={self.Z : noise}) * self.dataMax
                               fig, plot = create_fig(None, None)
                               line(plot, arrArange(self.num_input), (fake_waveForm[0] * self.dataMax), "GAN test",
                                    "fake wave form" , None, 1)
@@ -297,13 +296,14 @@ class GenerativeAdversarialNet:
                               if not os.path.exists(sampleImg_root):
                                    os.mkdir(sampleImg_root)
                               plt.savefig(sampleImg_root + "/sample_{}.png".format(i), bbox_inches="tight")
+                              plt.close()
                               print(" \n create fake wave-form to project/learning_log/GAN/sample_{}.png".format(i)  )
                print("\n ===================== ")
 
                fake_arr = np.zeros([self.data_row, self.data.shape[1]])
                for i in range(self.data_row):
                     sample = np.expand_dims(self.data[i], axis=0) / self.dataMax
-                    noise = self.create_noise()
+                    noise = self.create_noise(0.5, 0.01)
                     fake_arr[i] = sess.run(G, feed_dict={self.Z : noise})
                return fake_arr * self.dataMax
 
@@ -330,15 +330,15 @@ def GAN_run(src_arr, itemId, test, learning_rate, step, print_step, damageList):
 class DeepNeuralNet:
      def __init__(self, data, itemId, test = 100, learning_rate = 0.001, step = 100,
                   print_step = 10):
+          # item id
+          self.itemId = itemId
+
           # src data
-          self.data = data
+          self.data, self.labels = self.expandDamageWaveForm(
+               data, hgCluster_single_metric(data, 3), Damage_label = 1, multiple = 100)
           self.data_row = int(self.data.shape[0])
           self.dataMax = self.data.max()
           self.testSpace = test
-
-          # item id
-          self.itemId = itemId
-          self.labels = hgCluster_single_metric(self.data, 3)
 
           self.one_hot_labels = np.zeros([self.data_row, 3])
           for i in range(len(self.labels)):
@@ -346,6 +346,7 @@ class DeepNeuralNet:
                     if (self.labels[i] == j):
                          self.one_hot_labels[i, j] = 1
                          break
+
           # run test
           if ( self.data_row < test ):
                print("\n error : test row must small then total row \n")
@@ -381,8 +382,31 @@ class DeepNeuralNet:
           self.layer2 = tf.nn.relu(tf.matmul(self.layer1, self.W2) + self.b2)
           self.layer3 = tf.nn.relu(tf.matmul(self.layer2, self.W3) + self.b3)
           self.fc = tf.matmul(self.layer3, self.W4) + self.b4
+          self.softmax = tf.nn.softmax(self.fc)
 
-     def run(self):
+     def expandDamageWaveForm(self, data, labels, Damage_label, multiple):
+          tempList = []
+          for i in range(len(labels)):
+               if ( labels[i] == Damage_label):
+                    for j in range(multiple):
+                         mask = np.random.normal(0, 0.001, size = (data.shape[1]))
+                         temp = data[i] + mask
+                         tempList.append(temp)
+          tempArr = list2numpy(tempList)
+          newLabel = np.zeros([ data.shape[0] + tempArr.shape[0] ])
+          newLabel[:data.shape[0]] = labels
+          newLabel[data.shape[0]:] = np.full_like(np.arange(tempArr.shape[0], dtype=int), Damage_label)
+          newData = np.zeros([ data.shape[0] + tempArr.shape[0], data.shape[1] ])
+          newData[:data.shape[0]] = data
+          newData[data.shape[0]:] = tempArr
+
+          shuffleIndex = np.random.permutation(len(newLabel))
+          return newData[shuffleIndex], newLabel[shuffleIndex]
+
+     def getNewData(self):
+          return self.data, self.labels
+
+     def run(self, test = True):
           varList = [self.W1, self.b1, self.W2, self.b2, self.W3, self.b3, self.W4, self.b4]
           loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(
                logits = self.fc, labels = self.y))
@@ -394,7 +418,7 @@ class DeepNeuralNet:
           loss_list = []
           for i in range(1, self.num_steps):
                step_start = time.time()
-               for j in range(self.data_row):
+               for j in range(self.data_row-self.testSpace):
                     sample = np.expand_dims(self.data[j], axis=0) / self.dataMax
                     sample_label = np.expand_dims(self.one_hot_labels[j], axis=0)
 
@@ -409,17 +433,47 @@ class DeepNeuralNet:
                     print("\n time : " + str( (point_step_final - step_start) * self.print_point) )
                     print(" ===================== ")
                     #save(self.LOG_DIR, saver, sess, i)
-          return list2numpy(loss_list)
+
+          if( test == True):
+               test_result_list = []
+               test_start = time.time()
+               for j in range(self.data_row-self.testSpace, self.data_row):
+                    sample = np.expand_dims(self.data[j], axis = 0) / self.dataMax
+                    sample_label = np.expand_dims(self.one_hot_labels[j], axis = 0)
+
+                    test_loss, test_result = sess.run([loss, self.softmax], feed_dict = {self.X : sample, self.y : sample_label})
+                    test_result_list.extend(test_result)
+
+               test_labels = tf.placeholder(tf.float32, [None, 3])
+               predict = list2numpy(test_result_list)
+               correct = tf.equal(tf.argmax(test_labels, 1), tf.argmax(test_labels, 1))
+               acc = tf.reduce_mean(tf.cast(correct, tf.float32))
+               accuracy = sess.run(acc, feed_dict = {test_labels : predict,
+                                                     test_labels : self.one_hot_labels[self.data_row-self.testSpace:]})
+
+               test_final = time.time()
+               print("\n ===================== ")
+               print(" TEST set Loss : %f ,  Accuracy : %f" %(test_loss, accuracy))
+               print(" time : " + str( test_final - test_start))
+               
+          return self.data, list2numpy(loss_list), predict 
 
 def DNN_run(src_arr, itemId, test, learning_rate, step, print_step):
      DNN = DeepNeuralNet(src_arr, itemId, test, learning_rate, step, print_step)
-     printOption("Deep Neural Network", learning_rate, step, src_arr.shape[0])
-     loss_list = DNN.run()
-
-     tick_arr = arrArange(src_arr.shape[1])
+     printOption("Deep Neural Network", learning_rate, step, DNN.data.shape[0])
+     data, loss, predict = DNN.run()
+     
      fig, plot = create_fig(1,2)
-     line(plot[0], loss_list, None, "loss", "DNN-loss", None, 1, option="singleArr")
-          #print(" - drawing plot ... {}".format(i+1) + " / " + "{}".format(src_arr.shape[0]) , end = "\r")
+     line(plot[0], loss, None, "loss", "DNN-loss", None, 1, option="singleArr")
+     for i in range(predict.shape[0]):
+          if( np.argmax(predict[i]) == 1):
+               setColor = "red"
+          elif( np.argmax(predict[i]) == 2):
+               setColor = "green"
+          else:
+               setColor = "blue"
+          line(plot[1], np.arange(data.shape[1]), data[data.shape[0]-predict.shape[0]+i], "predict", "DNN-result", setColor, 1)
+          print(" - drawing plot ... {}".format(i+1) + " / " + "{}".format(predict.shape[0]) , end = "\r")
      print("\n")
      return fig, step
      
