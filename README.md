@@ -34,6 +34,7 @@
 #### Hierarchical(agglomerative) clustering ####
 파형 그대로 각 파형간 거리를 통해 군집화 합니다.
 파형간 코사인, 유클리디안, 멘하튼 거리 계산법을 사용합니다.
+
 참고: http://scikitlearn.org/stable/auto_examples/cluster/plot_digits_linkage.html#sphx-glr-auto-examples-cluster-plot-digits-linkage-py
 
 #### simple auto-encoder ####
@@ -41,6 +42,7 @@
 여기서 사용 목적은 각각 다른 틱을 동기화 하려는 것입니다.
 각 부품당 틱을 일치화 시킴으로써 이후 머신러닝 네트워크에서 
 미니배치학습이나 유연한 네트워크 구조를 사용할수 있을것입니다.
+
 참고 : https://github.com/floydhub/tensorflow-examples/blob/master/3_NeuralNetworks/autoencoder.py
 
 #### simple Generative Adversarial Network ####
