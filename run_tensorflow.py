@@ -3,18 +3,19 @@ import numpy as np
 import time, os
 
 from plot import *
-from numpy_process import list2numpy
+from numpy_process import list2numpy, arrArange
 from run_sklearn import hgCluster_single_metric
 
 project_ROOT = os.path.abspath(os.path.dirname(__file__))
 learningLog = os.path.join(project_ROOT, "learning_log")
 
-def printOption(learningName, learningRate, learningStep, data_row):
+def printOption(learningName, learningRate, learningStep, data_row, damageList):
           print(" ========================== ")
           print(" " + str(learningName))
           print(" learning rate : " + str(learningRate))
           print(" train step : " + str(learningStep))
           print(" data row length : " + str(data_row))
+          print(" damaged item id : " + str(damageList))
           print(" ========================== ")
 
 def save(log_dir, saver, sess, step):
@@ -32,6 +33,7 @@ class autoEncoder:
           
           # src data
           self.data = data
+          np.random.shuffle(self.data)
           self.data_row = int(self.data.shape[0])
           self.dataMax = self.data.max()
           self.testSpace = test
@@ -45,8 +47,8 @@ class autoEncoder:
           self.num_steps = step
           self.print_point = print_step
           
-          self.num_hidden_1 = 128
-          self.num_hidden_2 = 64
+          self.num_hidden_1 = 256
+          self.num_hidden_2 = 128
           self.num_input = int(self.data.shape[1])
 
           self.X = tf.placeholder("float", [1, self.num_input])
@@ -80,7 +82,7 @@ class autoEncoder:
                                               self.biases['decoder_b2']))
           return layer_2
 
-     def run(self, test = True):
+     def run(self, test = False, save = False, load = False):
           encoder_op = self.encoder(self.X)
           decoder_op = self.decoder(encoder_op)
 
@@ -94,12 +96,13 @@ class autoEncoder:
           saver = tf.train.Saver()
           with tf.Session() as sess:
                sess.run(init)
-               """
-               ckpt = tf.train.get_checkpoint_state(os.path.join("learning_log", "autoEncoder"))
-               if ckpt and ckpt.model_checkpoint_path:
-                    saver.restore(sess, ckpt.model_checkpoint_path)
-                    print("Model restored...")
-                    """
+
+               if load:
+                    ckpt = tf.train.get_checkpoint_state(os.path.join("learning_log", "autoEncoder"))
+                    if ckpt and ckpt.model_checkpoint_path:
+                         saver.restore(sess, ckpt.model_checkpoint_path)
+                         print("Model restored...")
+                    
 
                # train
                for i in range(1, self.num_steps+1):
@@ -115,55 +118,81 @@ class autoEncoder:
                          point_step_final = time.time()
                          print("\n time : " + str( (point_step_final - step_start) * self.print_point) )
                          print(" ===================== ")
-                         #save(self.LOG_DIR, saver, sess, i)
+                         if save:
+                              save(self.LOG_DIR, saver, sess, i)
                print("\n ===================== ")
 
-               # encoder
+               # encoder, decoder
                y_encoder = []
+               y_decoder = []
                for j in range(self.data_row):
                     sample = np.expand_dims(self.data[j], axis=0) / self.dataMax
 
-                    y_AE = sess.run(encoder_op, feed_dict = {self.X : sample})
-                    y_encoder.extend(y_AE)
+                    y_en, y_de = sess.run([encoder_op, decoder_op], feed_dict = {self.X : sample})
+                    y_encoder.extend(y_en)
+                    y_decoder.extend(y_de)
 
-               # compare decoder
+               # compare test set decoder
                if(test == True):
-                    y_decoder = []
+                    test_decoder = []
                     for j in range(int(self.data_row - self.testSpace), self.data_row):
                          sample = np.expand_dims(self.data[j], axis=0) / self.dataMax
 
-                         y_AE = sess.run(decoder_op, feed_dict = {self.X : sample})
-                         y_decoder.extend(y_AE)
+                         test_AE = sess.run(decoder_op, feed_dict = {self.X : sample})
+                         test_decoder.extend(test_AE)
 
-                    de_arr = list2numpy(y_decoder)
+                    de_arr = list2numpy(test_decoder)
                     fig, plot = plt.subplots(1,2)
                     for i in range(self.data_row-self.testSpace):
-                         plot[0].plot( np.arange(self.num_input), self.data[i])
+                         line(plot[0], np.arange(self.num_input), self.data[i], None, "training", None, 1)
                     for i in range(self.testSpace):
-                         plot[1].plot( np.arange(self.num_input), de_arr[i] )
+                         line(plot[1], np.arange(self.num_input), de_arr[i], None, "test", None, 1)
                     fig.canvas.set_window_title("compare test")
                     plt.savefig(self.LOG_DIR + "/sample.png", bbox_inches="tight")
                     
-          newY_arr = list2numpy(y_encoder) * self.dataMax    
-          return newY_arr, self.num_hidden_2, self.num_steps
+          newY_en = list2numpy(y_encoder) * self.dataMax
+          newY_de = list2numpy(y_decoder) * self.dataMax
+          return newY_en, newY_de, self.num_hidden_2, self.num_steps
      
 def autoEncoder_run(src_arr, itemId, test, learning_rate, step, print_step, damageList):
      AE = autoEncoder(src_arr, itemId, test, learning_rate, step, print_step, damageList)
-     printOption("auto-encoder", learning_rate, step, src_arr.shape[0])
-     encoded_data, n_encode, step = AE.run()
+     printOption("auto-encoder", learning_rate, step, src_arr.shape[0], damageList)
+     encoded_data, decoded_data, n_encode, step = AE.run()
+
+     fig, plot = create_fig(1,3)
+     legend_list = []
+     if ( damageList == []):
+          hgCluster_labels = hgCluster_single_metric(src_arr, 3)
+          for label, color, label_name in zip(arrArange(3), "byg", ["label 1", "label 2", "label 3"]):
+               legend_list.append(legend_label(color, label_name))
      
-     compareName = "original"
-     tick_arr = arrArange(src_arr.shape[1])
-     fig, plot = create_fig(1,2)
-     for i in range(src_arr.shape[0]):
-          if( str(itemId[i]) in damageList):
-               line(plot[0], tick_arr, src_arr[i], itemId[i], compareName, "red", 2)
-               line(plot[1], arrArange(n_encode), encoded_data[i], itemId[i], "encoded", "red", 2)
-          else:
-               line(plot[0], tick_arr, src_arr[i], itemId[i], compareName, "blue", 0.1)
-               line(plot[1], arrArange(n_encode), encoded_data[i], itemId[i], "encoded", "blue", 0.1)
-          print(" - drawing plot ... {}".format(i+1) + " / " + "{}".format(src_arr.shape[0]) , end = "\r")
-     print("\n")
+               origin = src_arr[hgCluster_labels == label].T
+               encoded = encoded_data[hgCluster_labels == label].T
+               decoded = decoded_data[hgCluster_labels == label].T
+               
+               line(plot[0], origin, None, label, "original", color, 1, option="singleArr")
+               line(plot[1], encoded, None, label, "encoded", color, 1, option = "singleArr")
+               line(plot[2], decoded, None, label, "dncoded", color, 1, option = "singleArr")
+     else:
+          for i in range(src_arr.shape[0]):
+               if( str(itemId[i]) in damageList):
+                    line(plot[0], arrArange(src_arr.shape[1]), src_arr[i], itemId[i], "original", "red", 2)
+                    line(plot[1], arrArange(n_encode), encoded_data[i], itemId[i], "encoded", "red", 2)
+                    line(plot[2], arrArange(n_encode), dncoded_data[i], itemId[i], "decoded", "red", 2)
+               else:
+                    line(plot[0], arrArange(src_arr.shape[1]), src_arr[i], itemId[i], "original", "blue", 0.1)
+                    line(plot[1], arrArange(n_encode), encoded_data[i], itemId[i], "encoded", "blue", 0.1)
+                    line(plot[2], arrArange(n_encode), decoded_data[i], itemId[i], "decoded", "blue", 0.1)
+               print(" - drawing plot ... {}".format(i+1) + " / " + "{}".format(src_arr.shape[0]) , end = "\r")
+          print("\n")
+          
+          for color, label_name in zip(["blue", "red"], ["normal", "damage"]):
+               legend_list.append(legend_label(color, label_name))
+          
+                                  
+     plot_legend(plot[0], legend_list)
+     plot_legend(plot[1], legend_list)
+     plot_legend(plot[2], legend_list)
      return fig, step
 
 #"Generative Adversarial Networks."
@@ -192,50 +221,59 @@ class GenerativeAdversarialNet:
           self.num_steps = step
           self.print_point = print_step
           
-          self.num_hidden = 128
+          self.num_hidden1 = 128
+          self.num_hidden2 = 128
           self.num_input = int(self.data.shape[1])
-          self.num_noise = 128
+          self.num_noise = 64
 
           self.X = tf.placeholder(tf.float32, [1, self.num_input])
           self.Z = tf.placeholder(tf.float32, [1, self.num_noise])
 
           self.G = {
-               "W1" : tf.get_variable('g_w1', [self.num_noise, self.num_hidden], dtype=tf.float32, initializer=tf.truncated_normal_initializer(stddev=0.02)),
-               "b1" : tf.get_variable('g_b1', [self.num_hidden], initializer=tf.zeros_initializer()),
-               "W2" : tf.get_variable('g_w2', [self.num_hidden, self.num_input], dtype=tf.float32, initializer=tf.truncated_normal_initializer(stddev=0.02)),
-               "b2" : tf.get_variable('g_b2', [self.num_input], initializer=tf.zeros_initializer())
+               "W1" : tf.get_variable('g_w1', [self.num_noise, self.num_hidden1], dtype=tf.float32, initializer=tf.truncated_normal_initializer(stddev=0.02)),
+               "b1" : tf.get_variable('g_b1', [self.num_hidden1], initializer=tf.zeros_initializer()),
+               "W2" : tf.get_variable('g_w2', [self.num_hidden1, self.num_hidden2], dtype=tf.float32, initializer=tf.truncated_normal_initializer(stddev=0.02)),
+               "b2" : tf.get_variable('g_b2', [self.num_hidden2], initializer=tf.zeros_initializer()),
+               "W3" : tf.get_variable('g_w3', [self.num_hidden2, self.num_input], dtype=tf.float32, initializer=tf.truncated_normal_initializer(stddev=0.02)),
+               "b3" : tf.get_variable('g_b3', [self.num_input], initializer=tf.zeros_initializer())
                }
           self.D = {
-               "W1" : tf.get_variable('d_w1', [self.num_input, self.num_hidden], dtype=tf.float32, initializer=tf.truncated_normal_initializer(stddev=0.02)),
-               "b1" : tf.get_variable('d_b1', [self.num_hidden], initializer=tf.zeros_initializer()),
-               "W2" : tf.get_variable('d_w2', [self.num_hidden, 1], dtype=tf.float32, initializer=tf.truncated_normal_initializer(stddev=0.02)),
-               "b2" : tf.get_variable('d_b2', [1], initializer=tf.zeros_initializer())
+               "W1" : tf.get_variable('d_w1', [self.num_input, self.num_hidden1], dtype=tf.float32, initializer=tf.truncated_normal_initializer(stddev=0.02)),
+               "b1" : tf.get_variable('d_b1', [self.num_hidden1], initializer=tf.zeros_initializer()),
+               "W2" : tf.get_variable('d_w2', [self.num_hidden1, self.num_hidden2], dtype=tf.float32, initializer=tf.truncated_normal_initializer(stddev=0.02)),
+               "b2" : tf.get_variable('d_b2', [self.num_hidden2], initializer=tf.zeros_initializer()),
+               "W3" : tf.get_variable('d_w3', [self.num_hidden2, 1], dtype=tf.float32, initializer=tf.truncated_normal_initializer(stddev=0.02)),
+               "b3" : tf.get_variable('d_b3', [1], initializer=tf.zeros_initializer())
                }
 
           self.LOG_DIR = os.path.join(learningLog, "GAN")
 
      def generator(self, noise):
-          hidden = tf.nn.relu(
+          hidden1 = tf.nn.relu(
                tf.matmul(noise, self.G['W1']) + self.G['b1'])
-          output = tf.matmul(hidden, self.G['W2']) + self.G['b2']
+          hidden2 = tf.nn.relu(
+               tf.matmul(hidden1, self.G['W2']) + self.G['b2'])
+          output = tf.matmul(hidden2, self.G['W3']) + self.G['b3']
           return output
 
      def discriminator(self, inputs):
-          hidden = tf.nn.relu(
+          hidden1 = tf.nn.relu(
                tf.matmul(inputs, self.D['W1']) + self.D['b1'])
-          output = tf.matmul(hidden, self.D['W2']) + self.D['b2']
+          hidden2 = tf.nn.relu(
+               tf.matmul(hidden1, self.D['W2']) + self.D['b2'])
+          output = tf.matmul(hidden2, self.D['W3']) + self.D['b3']
           return output
 
      def create_noise(self, mean, scale):
           return np.random.normal(mean, scale, size = (1, self.num_noise))
 
-     def run(self, test = True):
+     def run(self, test = True, save = False, load = False):
           G = self.generator(self.Z)
           D_real = self.discriminator(self.X)
           D_fake = self.discriminator(G)
           
-          G_var_list = [self.G['W1'], self.G['b1'], self.G['W2'], self.G['b2']]
-          D_var_list = [self.D['W1'], self.D['b1'], self.D['W2'], self.D['b2']]
+          G_var_list = [self.G['W1'], self.G['b1'], self.G['W2'], self.G['b2'], self.G['W3'], self.G['b3']]
+          D_var_list = [self.D['W1'], self.D['b1'], self.D['W2'], self.D['b2'], self.D['W3'], self.D['b3']]
 
           loss_D_real = tf.reduce_mean(
                tf.nn.sigmoid_cross_entropy_with_logits(logits = D_real, labels = tf.ones_like(D_real) ))
@@ -261,12 +299,11 @@ class GenerativeAdversarialNet:
                summary_op = tf.summary.merge_all()
                summary_writer = tf.summary.FileWriter(os.path.join("learning_log", "GAN"))
                sess.run(init)
-               """
-               ckpt = tf.train.get_checkpoint_state(os.path.join("learning_log", "GAN"))
-               if ckpt and ckpt.model_checkpoint_path:
-                    saver.restore(sess, ckpt.model_checkpoint_path)
-                    print(" -> Model restored...")
-                    """
+               if load:
+                    ckpt = tf.train.get_checkpoint_state(os.path.join("learning_log", "GAN"))
+                    if ckpt and ckpt.model_checkpoint_path:
+                         saver.restore(sess, ckpt.model_checkpoint_path)
+                         print(" -> Model restored...")
 
                for i in range(1, self.num_steps+1):
                     step_start = time.time()
@@ -284,11 +321,12 @@ class GenerativeAdversarialNet:
                          point_step_final = time.time()
                          print("\n time : " + str( (point_step_final - step_start) * self.print_point) )
                          print(" ===================== ")
-                         #save(self.LOG_DIR, saver, sess, i)
+                         if save:
+                              save(self.LOG_DIR, saver, sess, i)
 
                          if( test == True):
                               noise = self.create_noise(0.5, 0.01)
-                              fake_waveForm = sess.run(G, feed_dict={self.Z : noise}) * self.dataMax
+                              fake_waveForm = sess.run(G, feed_dict={self.Z : noise})
                               fig, plot = create_fig(None, None)
                               line(plot, arrArange(self.num_input), (fake_waveForm[0] * self.dataMax), "GAN test",
                                    "fake wave form" , None, 1)
@@ -309,7 +347,7 @@ class GenerativeAdversarialNet:
 
 def GAN_run(src_arr, itemId, test, learning_rate, step, print_step, damageList):
      GAN = GenerativeAdversarialNet(src_arr, itemId, test, learning_rate, step, print_step, damageList)
-     printOption("Generative Adversarial Network", learning_rate, step, src_arr.shape[0])
+     printOption("Generative Adversarial Network", learning_rate, step, src_arr.shape[0], damageList)
      fake_arr = GAN.run()
 
      compareName = "original"
@@ -384,6 +422,8 @@ class DeepNeuralNet:
           self.fc = tf.matmul(self.layer3, self.W4) + self.b4
           self.softmax = tf.nn.softmax(self.fc)
 
+          self.LOG_DIR = os.path.join(learningLog, "DNN")
+
      def expandDamageWaveForm(self, data, labels, Damage_label, multiple):
           tempList = []
           for i in range(len(labels)):
@@ -406,7 +446,7 @@ class DeepNeuralNet:
      def getNewData(self):
           return self.data, self.labels
 
-     def run(self, test = True):
+     def run(self, test = True, save = False, load = False):
           varList = [self.W1, self.b1, self.W2, self.b2, self.W3, self.b3, self.W4, self.b4]
           loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(
                logits = self.fc, labels = self.y))
@@ -414,6 +454,12 @@ class DeepNeuralNet:
                loss, var_list = varList)
           sess = tf.Session()
           sess.run(tf.global_variables_initializer())
+
+          if load:
+               ckpt = tf.train.get_checkpoint_state(os.path.join("learning_log", "DNN"))
+               if ckpt and ckpt.model_checkpoint_path:
+                    saver.restore(sess, ckpt.model_checkpoint_path)
+                    print(" -> Model restored...")
 
           loss_list = []
           for i in range(1, self.num_steps):
@@ -432,7 +478,8 @@ class DeepNeuralNet:
                     point_step_final = time.time()
                     print("\n time : " + str( (point_step_final - step_start) * self.print_point) )
                     print(" ===================== ")
-                    #save(self.LOG_DIR, saver, sess, i)
+                    if save:
+                         save(self.LOG_DIR, saver, sess, i)
 
           if( test == True):
                test_result_list = []
@@ -460,7 +507,7 @@ class DeepNeuralNet:
 
 def DNN_run(src_arr, itemId, test, learning_rate, step, print_step):
      DNN = DeepNeuralNet(src_arr, itemId, test, learning_rate, step, print_step)
-     printOption("Deep Neural Network", learning_rate, step, DNN.data.shape[0])
+     printOption("Deep Neural Network", learning_rate, step, DNN.data.shape[0], damageList)
      data, loss, predict = DNN.run()
      
      fig, plot = create_fig(1,2)

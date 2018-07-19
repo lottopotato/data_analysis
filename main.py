@@ -35,7 +35,10 @@ def main(argv):
           analysis_name = sys.argv[2]
      except IndexError:
           print(" data name list [ \"T01\" , \"T06\" , \"T07\" ] ")
-          print(" analysis list [ \"original\" , \"kmeans\" , \"autoEncoder\", \"hierarchical\", \"GAN\"] ")
+          print(" basic \"original\"")
+          print(" cluster [ \"kmeans\" , \"hierarchical\"")
+          print(" unsupervised learning [\"autoEncoder\", \"GAN\"] ")
+          print(" supervised learning [\"DNN\"]")
           print(" usage : main.py dataName clustering&unsupervised_Learning ")
           print(" or do input a field below.")
           dataName = input( " data name : ")
@@ -86,12 +89,12 @@ def plot_setting(tick_arr, src_arr, itemId, dataName, analysis_name, save):
           # unsupervised-learning. auto-encoder
           elif( analysis_name == "autoEncoder"):
                fig, step =autoEncoder_run(src_arr, itemId, test =100, learning_rate = 0.01,
-                                    step = 30, print_step = 10, damageList = damageList)
+                                    step = 30, print_step = 5, damageList = damageList)
                fig_name += "_step_" + str(step) + "_"
 
           # unsupervised-learning. Generative Adversarial Network
           elif( analysis_name == "GAN"):
-               fig, step = GAN_run(src_arr, itemId, test=10, learning_rate = 0.0002, step = 100, print_step = 10,
+               fig, step = GAN_run(src_arr, itemId, test=10, learning_rate = 0.0003, step = 100, print_step = 10,
                        damageList = damageList)
 
                fig_name += "_step" + str(step) + "_"
@@ -119,7 +122,10 @@ def plot_setting(tick_arr, src_arr, itemId, dataName, analysis_name, save):
                print( "damage : %i normal : %i" %(damage, normal))
                
           else:
-               print(" analysis list [ \"original\" , \"kmeans\" , \"autoEncoder\", \"hierarchical\", \"GAN\" ] ")
+               print(" basic [\"original\"]")
+               print(" cluster [ \"kmeans\" , \"hierarchical\"")
+               print(" unsupervised learning [\"autoEncoder\", \"GAN\"] ")
+               print(" supervised learning [\"DNN\"]")
                print( " error from main.py plot_setting")
                return False
                

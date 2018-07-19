@@ -1,6 +1,7 @@
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.dates as date
+from matplotlib.lines import Line2D
 
 import os, datetime
 
@@ -16,6 +17,13 @@ def create_fig(dimension_x, dimension_y):
 def setting_fig(fig, title):
      fig.canvas.set_window_title(title)
 
+def legend_label(color, label_name):
+     label = Line2D([0], [0], color = color, lw = 4, label = label_name)
+     return label
+
+def plot_legend(plot, handle):
+     plot.legend(handles = handle)
+     
 def addPlot_under(fig, location):
      addPlot = fig.add_subplot(location,1,location)
      return addPlot
@@ -27,6 +35,7 @@ def scatter(plot, x_data, y_data, name, plot_name, setColor, scale, option = "ad
      else:
           plot.scatter(x_data, y_data, color = setColor, s= scale, label = name)
           plot.set_title(plot_name)
+     plot.grid(alpha = 0.3)
 
 def line(plot, x_data, y_data, name, plot_name, setColor, thickness, option = "add"):
      if (option == "basic"):
@@ -38,12 +47,13 @@ def line(plot, x_data, y_data, name, plot_name, setColor, thickness, option = "a
      else:
           plot.plot(x_data, y_data, color = setColor, linewidth = thickness, label = name)
           plot.set_title(plot_name)
+     plot.grid(alpha = 0.3)
 
 def basic4info_fig(x_arr, y_arr, itemId, fig_name, thickness, save = True, damageList = []):
      print(" ========================== ")
      print(" basic original plot ")
      print(" original / mean / var / std ")
-     print(" damaged imem id : " + str(damageList))
+     print(" damaged item id : " + str(damageList))
      print(" ========================== ")
 
      data_row = y_arr.shape[0]
@@ -60,7 +70,7 @@ def basic4info_fig(x_arr, y_arr, itemId, fig_name, thickness, save = True, damag
                scatter(plot[1,0], i, array_cal_each_id(y_arr, cal = "var")[i], "var", basic4[2], "red", 5)
                scatter(plot[1,1], i, array_cal_each_id(y_arr, cal = "std")[i], "std", basic4[3], "red", 5)
           else:
-               line(plot[0,0], x_arr, y_arr[i], itemId[i], basic4[0], "blue", 0.1)
+               line(plot[0,0], x_arr, y_arr[i], "original", basic4[0], "blue", 0.1)
           print(" - drawing plot ... {}".format(i+1) + " / " + "{}".format(data_row) , end = "\r")
      print("\n")
      

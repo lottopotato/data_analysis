@@ -9,12 +9,13 @@ import time
 from numpy_process import *
 from plot import *
 
-def printOption(cluster_name, n_cluster, total_len, input_dataName):
+def printOption(cluster_name, n_cluster, total_len, input_dataName, damageList):
      print(" ========================== ")
      print(" cluster : " + cluster_name)
      print(" number of cluster : " + str(n_cluster))
      print(" use data : " + str(input_dataName))
      print(" data total row length : " + str(total_len))
+     print(" damaged item id : " + str(damageList))
      print(" ========================== ")
 
 # class kmean
@@ -28,14 +29,13 @@ def kmeans_run(arr, n_cluster):
      return x.reshape(n_cluster), y
 
 def kmeans(src_arr, numberOfCluster, input_dataName, itemId, thickness, damageList):
-     data_row = src_arr.shape[0]
      input_data = array_cal_each_id(src_arr, cal= input_dataName)
 
-     result_arr = np.zeros([data_row, numberOfCluster])
-     printOption("kmeans", numberOfCluster, data_row, input_dataName)
+     result_arr = np.zeros([src_arr.shape[0], numberOfCluster])
+     printOption("kmeans", numberOfCluster, src_arr.shape[0], input_dataName, damageList)
      
      center, label = kmeans_run(input_data, numberOfCluster)
-     return kmeans_plot(src_arr, label, data_row, input_data, input_dataName, itemId, thickness, damageList)
+     return kmeans_plot(src_arr, label, src_arr.shape[0], input_data, input_dataName, itemId, thickness, damageList)
      
 def kmeans_plot(src_data, label, data_row, input_data, input_dataName, itemId, thickness, damageList):
      fig, plot = create_fig(2,2)
@@ -54,12 +54,20 @@ def kmeans_plot(src_data, label, data_row, input_data, input_dataName, itemId, t
                print(" error kmeans")
                return False
           print(" - drawing plot ... {}".format(i+1) + " / " + "{}".format(data_row) , end = "\r")
-          scatter(plot[0,1], i, input_data[i], None, input_dataName, setColor, thickness)
+          scatter(plot[0,1], i, input_data[i], None, "K-means clustering", setColor, thickness)
           line(linePlot, src_data[i], None, "original", "original", setColor, thickness, option="singleArr")
           if( str(itemId[i]) in damageList):
-               line(linePlot, src_data[i], None, "original", "original", "red", 3, option="singleArr")
+               line(linePlot, src_data[i], None, "damage", "original", "red", 3, option="singleArr")
                scatter(plot[0,0], i, input_data[i], "damage", input_dataName, "red", 5)
                scatter(plot[0,1], i, input_data[i], "damage", input_dataName, "red", 5)
+
+     #legend
+     legend_list = []
+     for color, label in zip(["blue", "yellow", "green", "red"], ["label 1", "label 2", "label 3", "damage"]):
+          legend_list.append(legend_label(color, label))
+     
+     plot_legend(plot[0,1], legend_list)
+     plot_legend(linePlot, legend_list)
      print("\n")
      return fig
           
@@ -76,23 +84,28 @@ def hgCluster_run(arr, n_cluster):
      return modelList
 
 def hgCluster_single_metric(arr, n_cluster):
+     start = time.time()
      model = aggClusters(n_clusters = n_cluster, linkage = "average", affinity = "cityblock")
      model.fit(arr)
+     final = time.time()
+     print("\n Clustering complete.  time : {}\n".format(str(final - start)))
      return model.labels_
                
 def hgCluster(src_data, numberOfCluster, input_dataName, itemId, thickness, damageList):
-     data_row = src_data.shape[0]
-     printOption("Hierarchical-agglomerative", numberOfCluster, data_row, input_dataName)
+     printOption("Hierarchical-agglomerative", numberOfCluster, src_data.shape[0], input_dataName, damageList)
      hgClusterList = hgCluster_run(src_data, numberOfCluster)
+     
      fig, plot = create_fig(2,2)
-     for i in range(data_row):
+     for i in range(src_data.shape[0]):
           if( str(itemId[i]) in damageList):
                line(plot[0,0], arrArange(src_data.shape[1]), src_data[i], None, "original", "red", 2)
           else:
                line(plot[0,0], arrArange(src_data.shape[1]), src_data[i], None, "original", "blue", thickness)
-          print(" - drawing plot ... {}".format(i+1) + " / " + "{}".format(data_row) , end = "\r")
+          print(" - drawing plot ... {}".format(i+1) + " / " + "{}".format(src_data.shape[0]) , end = "\r")
      print("\n")
-     for label, color in zip(arrArange(numberOfCluster), "rgb"):
+     legend_list = []
+     for label, color, label_name in zip(arrArange(numberOfCluster), "byg", ["label 1", "label 2", "label 3"]):
+          legend_list.append(legend_label(color, label_name))
           temp = src_data[hgClusterList[0] == label].T
           line(plot[0,1], temp, None, "cosine", "cosine", color, thickness, option="singleArr")
           temp2 = src_data[hgClusterList[1] == label].T
@@ -101,6 +114,10 @@ def hgCluster(src_data, numberOfCluster, input_dataName, itemId, thickness, dama
           line(plot[1,1], temp3, None, "cityblock", "cityblock", color, thickness, option="singleArr")
           print(" - drawing plot ... {}".format(label+1) + " / " + "{}".format(numberOfCluster) , end = "\r")
      print("\n")
+     legend_list.append(legend_label("red", "damage"))
+     plot_legend(plot[0,1], legend_list)
+     plot_legend(plot[1,0], legend_list)
+     plot_legend(plot[1,1], legend_list)
                        
      return fig
 
