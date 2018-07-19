@@ -26,7 +26,7 @@
 3. 지도학습에서 hierarchical city block distance 로 레이블링
 
 ## 분석 기법 ##
-#### K - means clustering####
+#### K - means clustering ####
 표준편차 값을 입력으로 데이터를 군집화 합니다.
 
 참고 : http://scikitlearn.org/stable/modules/generated/sklearn.cluster.KMeans.html
