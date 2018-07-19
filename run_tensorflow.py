@@ -505,7 +505,7 @@ class DeepNeuralNet:
                
           return self.data, list2numpy(loss_list), predict 
 
-def DNN_run(src_arr, itemId, test, learning_rate, step, print_step):
+def DNN_run(src_arr, itemId, test, learning_rate, step, print_step, damageList):
      DNN = DeepNeuralNet(src_arr, itemId, test, learning_rate, step, print_step)
      printOption("Deep Neural Network", learning_rate, step, DNN.data.shape[0], damageList)
      data, loss, predict = DNN.run()

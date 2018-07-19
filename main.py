@@ -101,7 +101,8 @@ def plot_setting(tick_arr, src_arr, itemId, dataName, analysis_name, save):
 
           # supervised=learning. Deep Neural Network with Hierarchical - manhatten distance
           elif( analysis_name == "DNN"):
-               fig, step = DNN_run(src_arr, itemId, test = 200, learning_rate = 0.001, step = 10, print_step = 10)
+               fig, step = DNN_run(src_arr, itemId, test = 200, learning_rate = 0.001, step = 50, print_step = 10,
+                                   damageList = damageList)
                fig_name += "_step" + str(step) + "_"
 
           # expand damage wave form test, * 100
