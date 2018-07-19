@@ -63,14 +63,27 @@ https://github.com/carpedm20/DCGAN-tensorflow
 학습합니다.
 ## 클러스터링 ##
 #### kmeans ####
-![1]()
+T01
+![1](https://github.com/lottopotato/data_analysis/blob/alpha/T01_kmeans_n_3_2018-07-19%2013_38_27.png)
+T06
+![2](https://github.com/lottopotato/data_analysis/blob/alpha/T06_kmeans_n_3_2018-07-19%2013_51_31.png)
+T07
+![3](https://github.com/lottopotato/data_analysis/blob/alpha/T07_kmeans_n_3_2018-07-19%2014_09_55.png)
 
-![2]()
+#### agglomerative ####
+T01
+![4](https://github.com/lottopotato/data_analysis/blob/alpha/T01_hierarchical_n_3_2018-07-19%2013_41_10.png)
+T06
+![5](https://github.com/lottopotato/data_analysis/blob/alpha/T06_hierarchical_n_3_2018-07-19%2014_05_15.png)
+T07
+![6](https://github.com/lottopotato/data_analysis/blob/alpha/T07_hierarchical_n_3_2018-07-19%2014_13_22.png)
 
-![3]()
+## machine learning ##
+#### auto-encoder (data : T01 step : 30) ####
+![7](https://github.com/lottopotato/data_analysis/blob/alpha/T01_autoEncoder_step_30_2018-07-19%2014_42_41.png)
 
-![4]()
+#### Generative Adversarial Network (data : T01 step 100) ####
+![8](https://github.com/lottopotato/data_analysis/blob/alpha/T01_GAN_step100_2018-07-19%2014_49_49.png)
 
-![5]()
-
-![6]()
+#### Deep Neural Network (data : T01 step 50)
+![9](https://github.com/lottopotato/data_analysis/blob/alpha/T01_DNN_step50_2018-07-19%2015_01_20.png)
