@@ -82,7 +82,7 @@ T07
 ![7](https://github.com/lottopotato/data_analysis/blob/alpha/T01_autoEncoder_step_30_2018-07-19%2014_42_41.png)
 
 #### Generative Adversarial Network (data : T01 step 100) ####
-![8](https://github.com/lottopotato/data_analysis/blob/alpha/T01_GAN_step100_2018-07-19%2014_49_49.png)
+![8](https://github.com/lottopotato/data_analysis/blob/alpha/T01_GAN_step50_2018-07-20%2016_16_23.png)
 
 #### Deep Neural Network (data : T01 step 50)
 ![9](https://github.com/lottopotato/data_analysis/blob/alpha/T01_DNN_step50_2018-07-19%2015_01_20.png)
