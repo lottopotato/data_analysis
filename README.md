@@ -12,7 +12,7 @@
 - sklearn : 클러스터링
 - tensorflow : 머신러닝
 
-## 0718. 현재 진행사항 ##
+## 0720. 최종 진행사항 ##
 1. 오리지날 데이터(평균, 분산, 표준편차) 그래프 
 2. K-means 클러스터링
 3. Hierarchical-agglomerative 클러스터링
@@ -20,9 +20,9 @@
 5. 비지도학습 Generative Adversarial Networks
 6. 지도학습 Deep Neural Networks
 
-## 정리 ##
+### 정리 ###
 1. 클러스터는 T01 과 T06 데이터에서 좀더 잘 동작함.
-2. 비지도 학습 GAN 은 현재 의미 있는 결과를 볼수없음.
+2. 비지도 학습 GAN 에 auto-encoder 로 전처리와 후처리로 결과가 많이 개선됨.
 3. 지도학습에서 hierarchical city block distance 로 레이블링
 
 ## 분석 기법 ##
@@ -47,11 +47,8 @@
 
 #### simple Generative Adversarial Network ####
 파형을 학습하고 새로운 파형을 생성하는 비지도 학습입니다.
-현재 잘 작동 하지않으며 원인으로는 투토리얼 수준의 네트워크와
-그로 인한 매우 느린 학습률, 또한 파형의 정규화 기법의 부재로 예상됩니다.
-
-*디멘션이나 피쳐를 압축하는 전처리 과정과 최적화된 정규화, 충분한 시간이
-있으면 조금더 잘 동작하지 않을까 예상합니다.
+현재 데이터를 auto-encoder로 전처리, 후처리 하자 원본과 비슷한 가짜파형을
+만들 수 있습니다.
 
 참고 : https://github.com/golbin/TensorFlow-Tutorials/blob/master/09%20-%20GAN/01%20-%20GAN.py
 https://github.com/carpedm20/DCGAN-tensorflow

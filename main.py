@@ -88,13 +88,13 @@ def plot_setting(tick_arr, src_arr, itemId, dataName, analysis_name, save):
                
           # unsupervised-learning. auto-encoder
           elif( analysis_name == "autoEncoder"):
-               fig, step =autoEncoder_run(src_arr, itemId, test =100, learning_rate = 0.01,
+               fig, step =autoEncoder_run(src_arr, itemId, test =1, learning_rate = 0.01,
                                     step = 30, print_step = 5, damageList = damageList)
                fig_name += "_step_" + str(step) + "_"
 
           # unsupervised-learning. Generative Adversarial Network
           elif( analysis_name == "GAN"):
-               fig, step = GAN_run(src_arr, itemId, test=10, learning_rate = 0.0003, step = 100, print_step = 10,
+               fig, step = GAN_run(src_arr, itemId, test=1, learning_rate = 0.0002, step = 50, print_step = 5,
                        damageList = damageList)
 
                fig_name += "_step" + str(step) + "_"
